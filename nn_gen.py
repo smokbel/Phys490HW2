@@ -19,7 +19,7 @@ class NeuralNet(nn.Module):
         self.maxpool = nn.MaxPool2d(2)
         self.batch = nn.BatchNorm2d(1)
         
-        self.fc1= nn.Linear(7*7*1, 100)
+        self.fc1= nn.Linear(36, 100)
         self.fc2= nn.Linear(100, 5)
 
     # forward function
@@ -28,7 +28,8 @@ class NeuralNet(nn.Module):
         maxpool = self.maxpool(relu)
         conv1 = self.batch(maxpool)
         #Flattens the last two elements 
-        h_flat = conv1.reshape(conv1.shape[:2],-1)
+        h_flat = conv1.view(conv1.size(0), -1)
+        #h_flat = conv1.reshape(conv1.shape[:2],-1)
         h = func.relu(self.fc1(h_flat))
         y = torch.sigmoid(self.fc2(h))
         
@@ -44,7 +45,9 @@ class NeuralNet(nn.Module):
     def backprop(self, data, loss, epoch, optimizer):
         self.train()
         inputs= torch.from_numpy(data.x_train)
+        #inputs = inputs.reshape(len(inputs), 1,5)
         targets= torch.from_numpy(data.y_train)
+        targets = targets.reshape(len(targets),5)
         outputs= self(inputs)
         obj_val= loss(self.forward(inputs), targets)
         optimizer.zero_grad()
@@ -57,7 +60,9 @@ class NeuralNet(nn.Module):
         self.eval()
         with torch.no_grad():
             inputs= torch.from_numpy(data.x_test)
+            #inputs - inputs.reshape(len(inputs),1,5)
             targets= torch.from_numpy(data.y_test)
+            targets = targets.reshape(len(targets), 5)
             outputs= self(inputs)
             cross_val= loss(self.forward(inputs), targets)
         return cross_val.item()
